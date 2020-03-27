@@ -31,21 +31,21 @@ namespace FirebirdSql.Data.Common
 		public void Append(int type, byte value)
 		{
 			WriteByte(type);
-			WriteByte(1);
+			Write((int)1);
 			Write(value);
 		}
 
 		public void Append(int type, short value)
 		{
 			WriteByte(type);
-			WriteByte(2);
+			Write((int)2);
 			Write(value);
 		}
 
 		public void Append(int type, int value)
 		{
 			WriteByte(type);
-			WriteByte((byte)4);
+			Write((int)4);
 			Write(value);
 		}
 
@@ -57,7 +57,7 @@ namespace FirebirdSql.Data.Common
 		public void Append(int type, byte[] buffer)
 		{
 			WriteByte(type);
-			WriteByte(buffer.Length);
+			Write((int)buffer.Length);
 			Write(buffer);
 		}
 	}

@@ -402,7 +402,7 @@ namespace FirebirdSql.Data.FirebirdClient
 		{
 			var dpb = new DatabaseParameterBuffer();
 
-			dpb.Append(IscCodes.isc_dpb_version1);
+			dpb.Append(IscCodes.isc_dpb_version2);
 			dpb.Append(IscCodes.isc_dpb_dummy_packet_interval, new byte[] { 120, 10, 0, 0 });
 			dpb.Append(IscCodes.isc_dpb_sql_dialect, new byte[] { options.Dialect, 0, 0, 0 });
 			dpb.Append(IscCodes.isc_dpb_lc_ctype, options.Charset);
