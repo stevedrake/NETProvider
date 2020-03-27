@@ -25,6 +25,7 @@ using System.Text;
 
 using FirebirdSql.Data.FirebirdClient;
 using FirebirdSql.Data.Isql;
+using FirebirdSql.Data.Services;
 using NUnit.Framework;
 using System.Threading;
 using System.Collections.Generic;
@@ -80,7 +81,7 @@ namespace FirebirdSql.Data.UnitTests
 			using (FbCommand cmd = Connection.CreateCommand())
 			{
 				cmd.CommandText = @"
-RECREATE PROCEDURE TEST_SP (
+CREATE PROCEDURE TEST_SP (
   P01 SMALLINT,
   P02 INTEGER,
   P03 INTEGER,
@@ -224,6 +225,9 @@ END
 		}
 
 		[Test]
+#if INTERBASE
+		[Ignore("InterBase can't handle this many statements")]
+#endif
 		public void DNET274_EFCommandsHandlingShouldNotBlockGC()
 		{
 			for (int i = 1000; i < 21000; i++)
@@ -236,7 +240,8 @@ END
 		public void DNET595_ProperConnectionPoolConnectionsClosing()
 		{
 			FbConnection.ClearAllPools();
-			const int NumberOfThreads = 15;
+//			const int NumberOfThreads = 15;
+			const int NumberOfThreads = 2;
 
 			FbConnectionStringBuilder csb = BuildConnectionStringBuilder(FbServerType, Compression);
 			csb.Pooling = true;
@@ -332,6 +337,7 @@ CREATE TABLE TABMAT (
 		}
 
 		[Test]
+		[Ignore("InterBase doesn't support parameters in select")]
 		public void DNET304_VarcharOctetsParameterRoundtrip()
 		{
 			var data = new byte[] { 10, 20 };
@@ -350,6 +356,7 @@ CREATE TABLE TABMAT (
 		}
 
 		[Test]
+		[Ignore("InterBase doesn't support parameters in select")]
 		public void DNET304_CharOctetsParameterRoundtrip()
 		{
 			var data = new byte[] { 10, 20 };
@@ -376,7 +383,8 @@ CREATE TABLE TABMAT (
 			using (FbConnection conn = new FbConnection(connectionString))
 			{
 				conn.Open();
-				using (FbCommand command = new FbCommand("select current_timestamp from mon$database", conn))
+//				using (FbCommand command = new FbCommand("select current_timestamp from mon$database", conn))
+				using (FbCommand command = new FbCommand("select cast('NOW' as timestamp) from rdb$database", conn))
 				{
 					command.ExecuteScalar();
 				}

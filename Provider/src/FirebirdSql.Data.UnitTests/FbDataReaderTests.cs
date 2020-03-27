@@ -323,6 +323,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void DisposeTest()
 		{
+			// procedure parameters schema query assumes 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			using (FbCommand command = new FbCommand("DATAREADERTEST", Connection))
 			{
 				command.CommandType = CommandType.StoredProcedure;
@@ -343,7 +347,11 @@ namespace FirebirdSql.Data.UnitTests
 		{
 			FbTransaction transaction = Connection.BeginTransaction();
 
+#if INTERBASE
+			FbCommand command = new FbCommand("select 0 as fOo, 0 as \"BaR\", 0 as BAR from TEST", Connection, transaction);
+#else
 			FbCommand command = new FbCommand("select first 1 0 as fOo, 0 as \"BaR\", 0 as BAR from TEST", Connection, transaction);
+#endif
 
 			IDataReader reader = command.ExecuteReader();
 			while (reader.Read())
@@ -372,6 +380,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void ReadBinaryTest()
 		{
+			// binary literals added in 2.5
+			if (!EnsureVersion(new Version("2.5.0.0")))
+				return;
+
 			FbTransaction transaction = Connection.BeginTransaction();
 
 			byte[] bytes = new byte[1024];
@@ -418,8 +430,11 @@ namespace FirebirdSql.Data.UnitTests
 
 			using (var cmd = Connection.CreateCommand())
 			{
-				cmd.CommandText = "select cast(@foo as varchar(5)) from rdb$database";
-				cmd.Parameters.Add(new FbParameter() { ParameterName = "@foo", FbDbType = FbDbType.VarChar, Size = 5, Value = value });
+// interbase doesn't support parameters in select?
+// does that mean this test is pointless? (bug 183 refers to parameter processing)
+				cmd.CommandText = string.Format("select cast('{0}' as varchar(5)) from rdb$database", value);
+//				cmd.CommandText = "select cast(@foo as varchar(5)) from rdb$database";
+//				cmd.Parameters.Add(new FbParameter() { ParameterName = "@foo", FbDbType = FbDbType.VarChar, Size = 5, Value = value });
 				using (var reader = cmd.ExecuteReader())
 				{
 					while (reader.Read())

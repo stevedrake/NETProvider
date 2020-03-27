@@ -141,6 +141,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void BigIntArrayTest()
 		{
+			// BIGINT type added in 1.5
+			if (!EnsureVersion(new Version("1.5.0.0")))
+				return;
+
 			Transaction = Connection.BeginTransaction();
 
 			int id_value = GetId();
@@ -624,6 +628,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void BigIntArrayPartialUpdateTest()
 		{
+			// BIGINT type added in 1.5
+			if (!EnsureVersion(new Version("1.5.0.0")))
+				return;
+
 			string updateText = "update	TEST set larray_field =	@array_field " +
 								"WHERE int_field = 1";
 

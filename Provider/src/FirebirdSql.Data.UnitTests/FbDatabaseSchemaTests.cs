@@ -144,6 +144,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void ProcedureParameters()
 		{
+			// procedure parameters schema query assumes 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			DataTable procedureParameters = Connection.GetSchema("ProcedureParameters");
 
 			procedureParameters = Connection.GetSchema("ProcedureParameters", new string[] { null, null, "SELECT_DATA" });

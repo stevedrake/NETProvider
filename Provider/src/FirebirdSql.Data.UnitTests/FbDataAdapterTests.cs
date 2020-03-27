@@ -274,6 +274,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void UpdateBigIntTest()
 		{
+			// BIGINT type added in 1.5
+			if (!EnsureVersion(new Version("1.5.0.0")))
+				return;
+
 			string sql = "select * from TEST where int_field = @int_field";
 			FbTransaction transaction = Connection.BeginTransaction();
 			FbCommand command = new FbCommand(sql, Connection, transaction);

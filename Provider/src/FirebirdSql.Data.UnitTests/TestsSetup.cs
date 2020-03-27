@@ -19,6 +19,7 @@
 using System;
 using System.Collections.Generic;
 using System.Configuration;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -35,7 +36,15 @@ namespace FirebirdSql.Data.UnitTests
 		internal const string Password = "masterkey";
 		internal const string DataSource = "localhost";
 		internal const int Port = 3050;
+//		internal const string UserID = "sysdba";
+//		internal const string Password = "FS2004nz";
+//		internal const string DataSource = "dvpapainca01";
+//		internal const int Port = 3051;
+#if INTERBASE
+		internal const string Charset = "unicode_fss";
+#else
 		internal const string Charset = "utf8";
+#endif
 		internal const bool Pooling = false;
 		internal const int PageSize = 16384;
 		internal const bool ForcedWrite = false;
@@ -49,6 +58,15 @@ namespace FirebirdSql.Data.UnitTests
 			{
 				var cs = TestsBase.BuildConnectionString(serverType, compression);
 				FbConnection.CreateDatabase(cs, PageSize, ForcedWrite, true);
+#if INTERBASE  // IB needs separate statement to set default charset
+				using (var conn = new FbConnection(cs)) {
+					conn.Open();
+					using (var cmd = new FbCommand("update rdb$database set rdb$character_set_name = @charset", conn)) {
+						cmd.Parameters.Add("@charset", Charset.ToUpper());  // charset is case sensitive - use ToUpper() here, upper() in sql, or set Charset = 'UNICODE_FSS'???
+						cmd.ExecuteNonQuery();
+					}
+				}
+#endif
 				CreateTables(cs);
 				CreateProcedures(cs);
 				CreateTriggers(cs);
@@ -58,7 +76,11 @@ namespace FirebirdSql.Data.UnitTests
 
 		public static string Database(FbServerType serverType, bool compression)
 		{
+#if INTERBASE
+			return Path.Combine(Path.GetTempPath(), $"{DatabaseBase}_{serverType}_{compression}.ib");
+#else
 			return $"{DatabaseBase}_{serverType}_{compression}.fdb";
+#endif
 		}
 
 		[OneTimeTearDown]
@@ -81,53 +103,61 @@ namespace FirebirdSql.Data.UnitTests
 
 				StringBuilder commandText = new StringBuilder();
 
-				commandText.Append("RECREATE TABLE TEST (");
-				commandText.Append("INT_FIELD		 INTEGER DEFAULT 0 NOT NULL	PRIMARY	KEY,");
-				commandText.Append("CHAR_FIELD		 CHAR(30),");
-				commandText.Append("VARCHAR_FIELD	 VARCHAR(100),");
-				commandText.Append("BIGINT_FIELD	 BIGINT,");
-				commandText.Append("SMALLINT_FIELD	 SMALLINT,");
-				commandText.Append("DOUBLE_FIELD	 DOUBLE	PRECISION,");
-				commandText.Append("FLOAT_FIELD		 FLOAT,");
-				commandText.Append("NUMERIC_FIELD	 NUMERIC(15,2),");
-				commandText.Append("DECIMAL_FIELD	 DECIMAL(15,2),");
-				commandText.Append("DATE_FIELD		 DATE,");
-				commandText.Append("TIME_FIELD		 TIME,");
-				commandText.Append("TIMESTAMP_FIELD	 TIMESTAMP,");
-				commandText.Append("CLOB_FIELD		 BLOB SUB_TYPE 1 SEGMENT SIZE 80,");
-				commandText.Append("BLOB_FIELD		 BLOB SUB_TYPE 0 SEGMENT SIZE 80,");
-				commandText.Append("IARRAY_FIELD	 INTEGER [0:3],");
-				commandText.Append("SARRAY_FIELD	 SMALLINT [0:4],");
-				commandText.Append("LARRAY_FIELD	 BIGINT	[0:5],");
-				commandText.Append("FARRAY_FIELD	 FLOAT [0:3],");
-				commandText.Append("BARRAY_FIELD	 DOUBLE	PRECISION [1:4],");
-				commandText.Append("NARRAY_FIELD	 NUMERIC(10,6) [1:4],");
-				commandText.Append("DARRAY_FIELD	 DATE [1:4],");
-				commandText.Append("TARRAY_FIELD	 TIME [1:4],");
-				commandText.Append("TSARRAY_FIELD	 TIMESTAMP [1:4],");
-				commandText.Append("CARRAY_FIELD	 CHAR(21) [1:4],");
-				commandText.Append("VARRAY_FIELD	 VARCHAR(30) [1:4],");
-				commandText.Append("BIG_ARRAY		 INTEGER [1:32767],");
-				commandText.Append("EXPR_FIELD		 COMPUTED BY (smallint_field * 1000),");
-				commandText.Append("CS_FIELD		 CHAR(1) CHARACTER SET UNICODE_FSS,");
-				commandText.Append("UCCHAR_ARRAY	 CHAR(10) [1:10] CHARACTER SET UNICODE_FSS);");
+				commandText.Append("CREATE TABLE TEST (");
+				commandText.Append("INT_FIELD        INTEGER DEFAULT 0 NOT NULL PRIMARY KEY,");
+				commandText.Append("CHAR_FIELD       CHAR(30),");
+				commandText.Append("VARCHAR_FIELD    VARCHAR(100),");
+#if INTERBASE
+				commandText.Append("BIGINT_FIELD     INTEGER,");
+#else
+				commandText.Append("BIGINT_FIELD     BIGINT,");
+#endif
+				commandText.Append("SMALLINT_FIELD   SMALLINT,");
+				commandText.Append("DOUBLE_FIELD     DOUBLE PRECISION,");
+				commandText.Append("FLOAT_FIELD      FLOAT,");
+				commandText.Append("NUMERIC_FIELD    NUMERIC(15,2),");
+				commandText.Append("DECIMAL_FIELD    DECIMAL(15,2),");
+				commandText.Append("DATE_FIELD       DATE,");
+				commandText.Append("TIME_FIELD       TIME,");
+				commandText.Append("TIMESTAMP_FIELD  TIMESTAMP,");
+				commandText.Append("CLOB_FIELD       BLOB SUB_TYPE 1 SEGMENT SIZE 80,");
+				commandText.Append("BLOB_FIELD       BLOB SUB_TYPE 0 SEGMENT SIZE 80,");
+				commandText.Append("IARRAY_FIELD     INTEGER [0:3],");
+				commandText.Append("SARRAY_FIELD     SMALLINT [0:4],");
+#if INTERBASE
+				commandText.Append("LARRAY_FIELD     INTEGER [0:5],");
+#else
+				commandText.Append("LARRAY_FIELD     BIGINT [0:5],");
+#endif
+				commandText.Append("FARRAY_FIELD     FLOAT [0:3],");
+				commandText.Append("BARRAY_FIELD     DOUBLE PRECISION [1:4],");
+				commandText.Append("NARRAY_FIELD     NUMERIC(10,6) [1:4],");
+				commandText.Append("DARRAY_FIELD     DATE [1:4],");
+				commandText.Append("TARRAY_FIELD     TIME [1:4],");
+				commandText.Append("TSARRAY_FIELD    TIMESTAMP [1:4],");
+				commandText.Append("CARRAY_FIELD     CHAR(21) [1:4],");
+				commandText.Append("VARRAY_FIELD     VARCHAR(30) [1:4],");
+				commandText.Append("BIG_ARRAY        INTEGER [1:32767],");
+				commandText.Append("EXPR_FIELD       COMPUTED BY (smallint_field * 1000),");
+				commandText.Append("CS_FIELD         CHAR(1) CHARACTER SET UNICODE_FSS,");
+				commandText.Append("UCCHAR_ARRAY     CHAR(10) [1:10] CHARACTER SET UNICODE_FSS);");
 
 				using (FbCommand command = new FbCommand(commandText.ToString(), connection))
 				{
 					command.ExecuteNonQuery();
 				}
 
-				using (FbCommand command = new FbCommand("recreate table PrepareTest(test_field varchar(20));", connection))
+				using (FbCommand command = new FbCommand("create table PrepareTest(test_field varchar(20));", connection))
 				{
 					command.ExecuteNonQuery();
 				}
 
-				using (FbCommand command = new FbCommand("recreate table log(occured timestamp, text varchar(20));", connection))
+				using (FbCommand command = new FbCommand("create table log(occured timestamp, text varchar(20));", connection))
 				{
 					command.ExecuteNonQuery();
 				}
 
-				using (FbCommand command = new FbCommand("RECREATE TABLE GUID_TEST (INT_FIELD INTEGER, GUID_FIELD CHAR(16) CHARACTER SET OCTETS)", connection))
+				using (FbCommand command = new FbCommand("CREATE TABLE GUID_TEST (INT_FIELD INTEGER, GUID_FIELD CHAR(16) CHARACTER SET OCTETS)", connection))
 				{
 					command.ExecuteNonQuery();
 				}
@@ -143,14 +173,14 @@ namespace FirebirdSql.Data.UnitTests
 				StringBuilder commandText = new StringBuilder();
 
 				commandText.Clear();
-				commandText.Append("RECREATE PROCEDURE SELECT_DATA  \r\n");
-				commandText.Append("RETURNS	( \r\n");
+				commandText.Append("CREATE PROCEDURE SELECT_DATA  \r\n");
+				commandText.Append("RETURNS ( \r\n");
 				commandText.Append("INT_FIELD INTEGER, \r\n");
-				commandText.Append("VARCHAR_FIELD VARCHAR(100),	\r\n");
+				commandText.Append("VARCHAR_FIELD VARCHAR(100), \r\n");
 				commandText.Append("DECIMAL_FIELD DECIMAL(15,2)) \r\n");
 				commandText.Append("AS \r\n");
 				commandText.Append("begin \r\n");
-				commandText.Append("FOR	SELECT INT_FIELD, VARCHAR_FIELD, DECIMAL_FIELD FROM	TEST INTO :INT_FIELD, :VARCHAR_FIELD, :DECIMAL_FIELD \r\n");
+				commandText.Append("FOR SELECT INT_FIELD, VARCHAR_FIELD, DECIMAL_FIELD FROM TEST INTO :INT_FIELD, :VARCHAR_FIELD, :DECIMAL_FIELD \r\n");
 				commandText.Append("DO \r\n");
 				commandText.Append("SUSPEND; \r\n");
 				commandText.Append("end;");
@@ -160,12 +190,12 @@ namespace FirebirdSql.Data.UnitTests
 				}
 
 				commandText.Clear();
-				commandText.Append("RECREATE PROCEDURE GETRECORDCOUNT	\r\n");
-				commandText.Append("RETURNS	( \r\n");
+				commandText.Append("CREATE PROCEDURE GETRECORDCOUNT \r\n");
+				commandText.Append("RETURNS ( \r\n");
 				commandText.Append("RECCOUNT SMALLINT) \r\n");
 				commandText.Append("AS \r\n");
 				commandText.Append("begin \r\n");
-				commandText.Append("for	select count(*)	from test into :reccount \r\n");
+				commandText.Append("for select count(*) from test into :reccount \r\n");
 				commandText.Append("do \r\n");
 				commandText.Append("suspend; \r\n");
 				commandText.Append("end\r\n");
@@ -175,13 +205,13 @@ namespace FirebirdSql.Data.UnitTests
 				}
 
 				commandText.Clear();
-				commandText.Append("RECREATE PROCEDURE GETVARCHARFIELD (\r\n");
+				commandText.Append("CREATE PROCEDURE GETVARCHARFIELD (\r\n");
 				commandText.Append("ID INTEGER)\r\n");
-				commandText.Append("RETURNS	(\r\n");
+				commandText.Append("RETURNS (\r\n");
 				commandText.Append("VARCHAR_FIELD VARCHAR(100))\r\n");
 				commandText.Append("AS\r\n");
 				commandText.Append("begin\r\n");
-				commandText.Append("for	select varchar_field from test where int_field = :id into :varchar_field\r\n");
+				commandText.Append("for select varchar_field from test where int_field = :id into :varchar_field\r\n");
 				commandText.Append("do\r\n");
 				commandText.Append("suspend;\r\n");
 				commandText.Append("end\r\n");
@@ -191,13 +221,13 @@ namespace FirebirdSql.Data.UnitTests
 				}
 
 				commandText.Clear();
-				commandText.Append("RECREATE PROCEDURE GETASCIIBLOB (\r\n");
+				commandText.Append("CREATE PROCEDURE GETASCIIBLOB (\r\n");
 				commandText.Append("ID INTEGER)\r\n");
-				commandText.Append("RETURNS	(\r\n");
-				commandText.Append("ASCII_BLOB BLOB	SUB_TYPE 1)\r\n");
+				commandText.Append("RETURNS (\r\n");
+				commandText.Append("ASCII_BLOB BLOB SUB_TYPE 1)\r\n");
 				commandText.Append("AS\r\n");
 				commandText.Append("begin\r\n");
-				commandText.Append("for	select clob_field from test	where int_field	= :id into :ascii_blob\r\n");
+				commandText.Append("for select clob_field from test where int_field = :id into :ascii_blob\r\n");
 				commandText.Append("do\r\n");
 				commandText.Append("suspend;\r\n");
 				commandText.Append("end\r\n");
@@ -207,12 +237,12 @@ namespace FirebirdSql.Data.UnitTests
 				}
 
 				commandText.Clear();
-				commandText.Append("RECREATE PROCEDURE DATAREADERTEST\r\n");
-				commandText.Append("RETURNS	(\r\n");
-				commandText.Append("content	VARCHAR(128))\r\n");
+				commandText.Append("CREATE PROCEDURE DATAREADERTEST\r\n");
+				commandText.Append("RETURNS (\r\n");
+				commandText.Append("content VARCHAR(128))\r\n");
 				commandText.Append("AS\r\n");
 				commandText.Append("begin\r\n");
-				commandText.Append("content	= 'test';\r\n");
+				commandText.Append("content = 'test';\r\n");
 				commandText.Append("suspend;\r\n");
 				commandText.Append("end\r\n");
 				using (FbCommand command = new FbCommand(commandText.ToString(), connection))
@@ -221,7 +251,7 @@ namespace FirebirdSql.Data.UnitTests
 				}
 
 				commandText.Clear();
-				commandText.Append("recreate procedure SimpleSP\r\n");
+				commandText.Append("create procedure SimpleSP\r\n");
 				commandText.Append("returns ( result integer ) as\r\n");
 				commandText.Append("begin\r\n");
 				commandText.Append("result = 1000;\r\n");
@@ -242,7 +272,7 @@ namespace FirebirdSql.Data.UnitTests
 				StringBuilder commandText = new StringBuilder();
 
 				commandText.Clear();
-				commandText.Append("RECREATE TRIGGER new_row FOR test	ACTIVE\r\n");
+				commandText.Append("CREATE TRIGGER new_row FOR test ACTIVE\r\n");
 				commandText.Append("AFTER INSERT POSITION 0\r\n");
 				commandText.Append("AS\r\n");
 				commandText.Append("BEGIN\r\n");
@@ -254,7 +284,7 @@ namespace FirebirdSql.Data.UnitTests
 				}
 
 				commandText.Clear();
-				commandText.Append("RECREATE TRIGGER update_row FOR test ACTIVE\r\n");
+				commandText.Append("CREATE TRIGGER update_row FOR test ACTIVE\r\n");
 				commandText.Append("AFTER UPDATE POSITION 0\r\n");
 				commandText.Append("AS\r\n");
 				commandText.Append("BEGIN\r\n");
@@ -265,8 +295,9 @@ namespace FirebirdSql.Data.UnitTests
 					command.ExecuteNonQuery();
 				}
 
+#if !INTERBASE
 				commandText.Clear();
-				commandText.Append("recreate trigger log active on connect\r\n");
+				commandText.Append("create trigger log active on connect\r\n");
 				commandText.Append("as\r\n");
 				commandText.Append("begin\r\n");
 				commandText.Append("insert into log (occured, text) values (current_timestamp, 'on connect');\r\n");
@@ -275,6 +306,7 @@ namespace FirebirdSql.Data.UnitTests
 				{
 					command.ExecuteNonQuery();
 				}
+#endif
 			}
 		}
 	}

@@ -208,7 +208,8 @@ namespace FirebirdSql.Data.UnitTests
 			FbConnectionStringBuilder csb = BuildConnectionStringBuilder(FbServerType, Compression);
 			csb.Pooling = true;
 			csb.ConnectionLifeTime = 120;
-			csb.MaxPoolSize = 10;
+//			csb.MaxPoolSize = 10;
+			csb.MaxPoolSize = 2;
 			string cs = csb.ToString();
 
 			var connections = new List<FbConnection>();
@@ -240,7 +241,8 @@ namespace FirebirdSql.Data.UnitTests
 			FbConnectionStringBuilder csb = BuildConnectionStringBuilder(FbServerType, Compression);
 			csb.Pooling = true;
 			csb.ConnectionLifeTime = 5;
-			csb.MinPoolSize = 3;
+//			csb.MinPoolSize = 3;
+			csb.MinPoolSize = 1;
 			string cs = csb.ToString();
 
 			int active = GetActiveConnections();
@@ -276,6 +278,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void DatabaseTriggersTest()
 		{
+			// database triggers added in 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			FbConnectionStringBuilder csb = BuildConnectionStringBuilder(FbServerType, Compression);
 			csb.Pooling = false;
 
@@ -312,7 +318,11 @@ namespace FirebirdSql.Data.UnitTests
 				conn.Open();
 				using (var command = conn.CreateCommand())
 				{
+#if INTERBASE
+					command.CommandText = "select USER from RDB$DATABASE";
+#else
 					command.CommandText = "select CURRENT_USER from RDB$DATABASE";
+#endif
 					var loggedUser = (string)command.ExecuteScalar();
 					Assert.AreEqual(TestsSetup.UserID, loggedUser);
 				}
@@ -323,6 +333,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void UseTrustedAuth()
 		{
+			// trusted auth added in 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			if (!EnsureServerType(FbServerType.Default))
 				return;
 

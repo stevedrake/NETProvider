@@ -390,6 +390,10 @@ end";
 		[Test]
 		public void TraceTest()
 		{
+			// fbtrace added in 2.5
+			if (!EnsureVersion(new Version("2.5.0.0")))
+				return;
+
 			var trace = new FbTrace();
 			trace.ConnectionString = BuildServicesConnectionString(FbServerType, Compression, false);
 			trace.DatabasesConfigurations.Add(new FbDatabaseTraceConfiguration()

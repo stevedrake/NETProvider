@@ -44,9 +44,13 @@ namespace FirebirdSql.Data.UnitTests
 		{
 			FbDatabaseInfo dbInfo = new FbDatabaseInfo(Connection);
 
+#if !INTERBASE
 			TestContext.WriteLine("Server Version: {0}", dbInfo.ServerVersion);
+#endif
 			TestContext.WriteLine("ISC Version : {0}", dbInfo.IscVersion);
+#if !INTERBASE
 			TestContext.WriteLine("Server Class : {0}", dbInfo.ServerClass);
+#endif
 			TestContext.WriteLine("Max memory : {0}", dbInfo.MaxMemory);
 			TestContext.WriteLine("Current memory : {0}", dbInfo.CurrentMemory);
 			TestContext.WriteLine("Page size : {0}", dbInfo.PageSize);

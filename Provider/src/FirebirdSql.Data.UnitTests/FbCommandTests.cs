@@ -634,6 +634,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void ReturningClauseTest()
 		{
+			// RETURNING clause added in 2.0
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			const int ColumnValue = 1234;
 			using (FbCommand cmd = Connection.CreateCommand())
 			{
@@ -731,7 +735,7 @@ end";
 		{
 			using (var cmd = Connection.CreateCommand())
 			{
-				cmd.CommandText = "recreate table NoCommandPlanTest (id int)";
+				cmd.CommandText = "create table NoCommandPlanTest (id int)";
 				cmd.Prepare();
 				var plan = default(string);
 				Assert.DoesNotThrow(() => { plan = cmd.CommandPlan; });
@@ -756,8 +760,11 @@ end";
 			var ts = TimeSpan.FromTicks(14321000);
 			using (var cmd = Connection.CreateCommand())
 			{
-				cmd.CommandText = "select cast(@value as time) from rdb$database";
-				cmd.Parameters.Add("value", ts);
+// interbase doesn't support parameters in select?
+// is there any point in running this test then?
+				cmd.CommandText = string.Format("select cast('{0}' as time) from rdb$database", ts.ToString(@"hh\:mm\:ss\.ffff"));
+//				cmd.CommandText = "select cast(@value as time) from rdb$database";
+//				cmd.Parameters.Add("value", ts);
 				var result = (TimeSpan)cmd.ExecuteScalar();
 				Assert.AreEqual(ts, result);
 			}
@@ -780,8 +787,11 @@ end";
 			var dt = new DateTime(635583639614321000);
 			using (var cmd = Connection.CreateCommand())
 			{
-				cmd.CommandText = "select cast(@value as timestamp) from rdb$database";
-				cmd.Parameters.Add("value", dt);
+// interbase doesn't support parameters in select?
+// is there any point in running this test then?
+				cmd.CommandText = string.Format("select cast('{0}' as timestamp) from rdb$database", dt.ToString(@"dd\.MM\.yyyy hh\:mm\:ss\.ffff"));
+//				cmd.CommandText = "select cast(@value as timestamp) from rdb$database";
+//				cmd.Parameters.Add("value", dt);
 				var result = (DateTime)cmd.ExecuteScalar();
 				Assert.AreEqual(dt, result);
 			}

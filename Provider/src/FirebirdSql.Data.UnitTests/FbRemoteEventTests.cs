@@ -32,6 +32,14 @@ namespace FirebirdSql.Data.UnitTests
 			: base(serverType, compression)
 		{ }
 
+		[SetUp]
+		public override void SetUp()
+		{
+			base.SetUp();
+			// EXECUTE BLOCK added in 2.0
+			EnsureVersion(new Version("2.0.0.0"));
+		}
+
 		[Test]
 		public void EventSimplyComesBackTest()
 		{

@@ -28,6 +28,7 @@ using System.Security.Cryptography;
 
 using NUnit.Framework;
 using FirebirdSql.Data.FirebirdClient;
+using FirebirdSql.Data.Isql;
 using FirebirdSql.Data.Services;
 using System.Diagnostics;
 
@@ -66,6 +67,13 @@ namespace FirebirdSql.Data.UnitTests
 		{
 			FbServerType = serverType;
 			Compression = compression;
+
+			// embedded mode added in 2.5
+			if (serverType == FbServerType.Embedded)
+				EnsureVersion(new Version("2.5.0.0"));
+			// compression added in 3.0
+			if (compression)
+				EnsureVersion(new Version("3.0.0.0"));
 		}
 
 		#endregion
@@ -113,7 +121,11 @@ values(@int_field, @char_field, @varchar_field, @bigint_field, @smallint_field, 
 						command.Parameters.Add("@int_field", FbDbType.Integer);
 						command.Parameters.Add("@char_field", FbDbType.Char);
 						command.Parameters.Add("@varchar_field", FbDbType.VarChar);
+#if INTERBASE
+						command.Parameters.Add("@bigint_field", FbDbType.Integer);
+#else
 						command.Parameters.Add("@bigint_field", FbDbType.BigInt);
+#endif
 						command.Parameters.Add("@smallint_field", FbDbType.SmallInt);
 						command.Parameters.Add("@float_field", FbDbType.Double);
 						command.Parameters.Add("@double_field", FbDbType.Double);
@@ -157,6 +169,9 @@ values(@int_field, @char_field, @varchar_field, @bigint_field, @smallint_field, 
 			{
 				connection.Open();
 
+#if INTERBASE
+				var commandText = "delete from test";
+#else
 				var commandText = @"
 execute block as
 declare name type of column rdb$relations.rdb$relation_name;
@@ -166,6 +181,7 @@ begin
         execute statement 'delete from ' || name;
     end
 end";
+#endif
 
 				using (var transaction = connection.BeginTransaction())
 				{
@@ -193,6 +209,7 @@ end";
 			cs.UserID = TestsSetup.UserID;
 			cs.Password = TestsSetup.Password;
 			cs.DataSource = TestsSetup.DataSource;
+			cs.Port = TestsSetup.Port;  // 2018-10-25 sjd: is this correct for service connection? (appears to be, tests fail without this)
 			if (includeDatabase)
 			{
 				cs.Database = TestsSetup.Database(serverType, compression);
@@ -224,12 +241,22 @@ end";
 		{
 			var csb = BuildConnectionStringBuilder(FbServerType, Compression);
 			csb.Pooling = false;
+
+			var sql = "select count(*) from mon$attachments where mon$attachment_id <> current_connection";
+#if INTERBASE
+			var server = new FbServerProperties();
+			server.ConnectionString = csb.ToString();
+			var implementation = server.GetImplementation();
+			if (implementation.StartsWith("InterBase"))
+				sql = "select count(*) - 1 from tmp$attachments";
+#endif
+
 			using (var conn = new FbConnection(csb.ToString()))
 			{
 				conn.Open();
 				using (var cmd = conn.CreateCommand())
 				{
-					cmd.CommandText = "select count(*) from mon$attachments where mon$attachment_id <> current_connection";
+					cmd.CommandText = sql;
 					return Convert.ToInt32(cmd.ExecuteScalar());
 				}
 			}
@@ -237,9 +264,13 @@ end";
 
 		protected Version GetServerVersion()
 		{
+#if INTERBASE
+			return new Version(1, 0, 0, 0);
+#else
 			var server = new FbServerProperties();
 			server.ConnectionString = BuildServicesConnectionString(FbServerType, Compression, false);
 			return FbServerProperties.ParseServerVersion(server.GetServerVersion());
+#endif
 		}
 
 		protected bool EnsureVersion(Version version)

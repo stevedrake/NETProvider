@@ -131,6 +131,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void DeriveParameters()
 		{
+			// procedure parameters schema query assumes 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			FbCommand command = new FbCommand("GETVARCHARFIELD", Connection);
 
 			command.CommandType = CommandType.StoredProcedure;
@@ -143,6 +147,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void DeriveParameters2()
 		{
+			// procedure parameters schema query assumes 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			FbTransaction transaction = Connection.BeginTransaction();
 
 			FbCommand command = new FbCommand("GETVARCHARFIELD", Connection, transaction);
@@ -159,6 +167,10 @@ namespace FirebirdSql.Data.UnitTests
 		[Test]
 		public void DeriveParametersNonExistingSP()
 		{
+			// procedure parameters schema query assumes 2.1
+			if (!EnsureVersion(new Version("2.1.0.0")))
+				return;
+
 			Assert.Throws<InvalidOperationException>(() =>
 			{
 				FbTransaction transaction = Connection.BeginTransaction();
