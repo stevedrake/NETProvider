@@ -36,7 +36,7 @@ namespace FirebirdSql.Data.Client.Native
 	/// </summary>
 	internal static class FbClientFactory
 	{
-		private static readonly string DefaultDllName = "fbembed";
+		private static readonly string DefaultDllName = "fbclient";
 
 		/// <summary>
 		/// Because generating the class at runtime is expensive, we cache it here based on the name

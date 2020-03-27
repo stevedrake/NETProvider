@@ -51,7 +51,7 @@ namespace FirebirdSql.Data.FirebirdClient
 		internal const IsolationLevel DefaultValueIsolationLevel = IsolationLevel.ReadCommitted;
 		internal const bool DefaultValueRecordsAffected = true;
 		internal const bool DefaultValueEnlist = false;
-		internal const string DefaultValueClientLibrary = "fbembed";
+		internal const string DefaultValueClientLibrary = "fbclient";
 		internal const int DefaultValueDbCachePages = 0;
 		internal const bool DefaultValueNoDbTriggers = false;
 		internal const bool DefaultValueNoGarbageCollect = false;
