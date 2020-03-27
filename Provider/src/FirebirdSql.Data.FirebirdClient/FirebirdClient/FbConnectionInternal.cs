@@ -26,9 +26,6 @@ using System.Text;
 using System.Diagnostics;
 using System.IO;
 using System.Reflection;
-#if NETSTANDARD1_6 || NETSTANDARD2_0
-using Microsoft.Extensions.PlatformAbstractions;
-#endif
 using FirebirdSql.Data.Common;
 #if !NETSTANDARD1_6
 using FirebirdSql.Data.Schema;
@@ -496,7 +493,7 @@ namespace FirebirdSql.Data.FirebirdClient
 		private string GetHostingPath()
 		{
 #if NETSTANDARD1_6 || NETSTANDARD2_0
-			return PlatformServices.Default.Application.ApplicationBasePath;
+			return AppContext.BaseDirectory;
 #else
 			Assembly assembly;
 			try
