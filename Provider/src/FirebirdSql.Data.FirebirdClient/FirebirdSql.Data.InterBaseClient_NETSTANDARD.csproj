@@ -1,0 +1,55 @@
+<Project Sdk="Microsoft.NET.Sdk" TreatAsLocalProperty="DefineConstants" >
+	<PropertyGroup>
+		<TargetFrameworks>netstandard1.6;netstandard2.0</TargetFrameworks>
+		<AssemblyName>FirebirdSql.Data.InterBaseClient</AssemblyName>
+		<RootNamespace>FirebirdSql.Data</RootNamespace>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>Properties\FirebirdSql.Data.FirebirdClient.snk</AssemblyOriginatorKeyFile>
+		<DelaySign>False</DelaySign>
+		<GenerateAssemblyInfo>False</GenerateAssemblyInfo>
+		<AppendTargetFrameworkToOutputPath>False</AppendTargetFrameworkToOutputPath>
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<OutputPath>bin\$(Configuration)\$(TargetFramework)</OutputPath>
+		<IntermediateOutputPath>obj\$(Configuration)\$(TargetFramework)</IntermediateOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Release'">
+		<DefineConstants>TRACE;INTERBASE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)'=='Debug'">
+		<DefineConstants>DEBUG;TRACE;INTERBASE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+		<None Remove="app.FirebirdSql.Data.FirebirdClient_NET40.config" />
+		<None Remove="Microsoft.Bcl.Build.targets" />
+		<None Remove="Schema\FbMetaData.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Schema\FbMetaData.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Remove="Entity\**" />
+		<EmbeddedResource Remove="Entity\**" />
+		<None Remove="Entity\**" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard2.0'">
+		<PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+	</ItemGroup>
+	<ItemGroup Condition="'$(TargetFramework)'=='netstandard1.6'">
+		<PackageReference Include="Microsoft.Extensions.PlatformAbstractions" Version="1.1.0" />
+		<PackageReference Include="System.Collections.NonGeneric" Version="4.3.0" />
+		<PackageReference Include="System.ComponentModel.Primitives" Version="4.3.0" />
+		<PackageReference Include="System.ComponentModel.TypeConverter" Version="4.3.0" />
+		<PackageReference Include="System.Data.Common" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.Process" Version="4.3.0" />
+		<PackageReference Include="System.Diagnostics.TraceSource" Version="4.3.0" />
+		<PackageReference Include="System.IO.UnmanagedMemoryStream" Version="4.3.0" />
+		<PackageReference Include="System.Linq.Parallel" Version="4.3.0" />
+		<PackageReference Include="System.Net.NameResolution" Version="4.3.0" />
+		<PackageReference Include="System.Reflection.Emit" Version="4.3.0" />
+		<PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
+		<PackageReference Include="System.Threading.Tasks.Parallel" Version="4.3.0" />
+		<PackageReference Include="System.Threading.Thread" Version="4.3.0" />
+	</ItemGroup>
+</Project>

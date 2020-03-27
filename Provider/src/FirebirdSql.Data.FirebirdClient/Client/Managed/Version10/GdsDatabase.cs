@@ -524,7 +524,12 @@ namespace FirebirdSql.Data.Client.Managed.Version10
 		{
 			var items = new byte[]
 			{
+#if INTERBASE
+				// version info common to InterBase & Firebird
+				IscCodes.isc_info_isc_version,
+#else
 				IscCodes.isc_info_firebird_version,
+#endif
 				IscCodes.isc_info_end
 			};
 			var info = GetDatabaseInfo(items, IscCodes.BUFFER_SIZE_256);

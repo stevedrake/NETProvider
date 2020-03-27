@@ -1,0 +1,70 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	<PropertyGroup>
+		<TargetFramework>net452</TargetFramework>
+		<AssemblyName>FirebirdSql.Data.InterBaseClient</AssemblyName>
+		<RootNamespace>FirebirdSql.Data</RootNamespace>
+		<SignAssembly>True</SignAssembly>
+		<AssemblyOriginatorKeyFile>Properties\FirebirdSql.Data.FirebirdClient.snk</AssemblyOriginatorKeyFile>
+		<DelaySign>False</DelaySign>
+		<GenerateAssemblyInfo>false</GenerateAssemblyInfo>
+		<AppendTargetFrameworkToOutputPath>false</AppendTargetFrameworkToOutputPath>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<OutputPath>bin\Release\NET45</OutputPath>
+		<BaseIntermediateOutputPath>obj\NET45</BaseIntermediateOutputPath>
+		<DefineConstants>TRACE;NET45;INTERBASE</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+		<AllowUnsafeBlocks>True</AllowUnsafeBlocks>
+		<OutputPath>bin\Debug\NET45</OutputPath>
+		<BaseIntermediateOutputPath>obj\NET45</BaseIntermediateOutputPath>
+		<DefineConstants>TRACE;DEBUG;NET45;INTERBASE</DefineConstants>
+	</PropertyGroup>
+	<ItemGroup>
+	  <Compile Remove="obj\**" />
+	  <EmbeddedResource Remove="obj\**" />
+	  <None Remove="obj\**" />
+	</ItemGroup>
+	<ItemGroup>
+		<None Remove="app.FirebirdSql.Data.FirebirdClient_NET40.config" />
+		<None Remove="Entity\ProviderManifest.xml" />
+		<None Remove="Entity\StoreSchemaDefinition.ssdl" />
+		<None Remove="Entity\StoreSchemaDefinitionVersion3.ssdl" />
+		<None Remove="Entity\StoreSchemaMapping.msl" />
+		<None Remove="Entity\StoreSchemaMappingVersion3.msl" />
+		<None Remove="Microsoft.Bcl.Build.targets" />
+		<None Remove="Schema\FbMetaData.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="Entity\ProviderManifest.xml" />
+		<EmbeddedResource Include="Entity\StoreSchemaDefinition.ssdl" />
+		<EmbeddedResource Include="Entity\StoreSchemaDefinitionVersion3.ssdl" />
+		<EmbeddedResource Include="Entity\StoreSchemaMapping.msl" />
+		<EmbeddedResource Include="Entity\StoreSchemaMappingVersion3.msl" />
+		<EmbeddedResource Include="Schema\FbMetaData.xml" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="System.Data.Entity" />
+		<Reference Include="System.Transactions" />
+	</ItemGroup>
+	<ItemGroup>
+		<Reference Include="EntityFramework">
+			<HintPath>..\..\lib\EF5\NET45\EntityFramework.dll</HintPath>
+		</Reference>
+	</ItemGroup>
+	<ItemGroup>
+		<Compile Update="FirebirdClient\FbCommand.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="FirebirdClient\FbCommandBuilder.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="FirebirdClient\FbConnection.cs">
+			<SubType>Component</SubType>
+		</Compile>
+		<Compile Update="FirebirdClient\FbDataAdapter.cs">
+			<SubType>Component</SubType>
+		</Compile>
+	</ItemGroup>
+</Project>

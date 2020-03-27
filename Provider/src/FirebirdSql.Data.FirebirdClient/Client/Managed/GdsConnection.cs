@@ -140,7 +140,11 @@ namespace FirebirdSql.Data.Client.Managed
 				{
 					xdrStream.Write(IscCodes.op_connect);
 					xdrStream.Write(IscCodes.op_attach);
+#if INTERBASE
+					xdrStream.Write(IscCodes.CONNECT_VERSION2);
+#else
 					xdrStream.Write(IscCodes.CONNECT_VERSION3);
+#endif
 					xdrStream.Write(IscCodes.GenericAchitectureClient);
 
 					xdrStream.Write(database);
@@ -297,6 +301,8 @@ namespace FirebirdSql.Data.Client.Managed
 				result.WriteByte(IscCodes.CNCT_user_verification);
 				result.WriteByte(0);
 
+// extra user id data not supported by InterBase
+#if !INTERBASE
 				if (!string.IsNullOrEmpty(_userID))
 				{
 					_srp = new SrpClient();
@@ -336,6 +342,7 @@ namespace FirebirdSql.Data.Client.Managed
 				result.WriteByte(IscCodes.CNCT_client_crypt);
 				result.WriteByte(4);
 				result.Write(new byte[] { 0, 0, 0, 0 }, 0, 4);
+#endif
 
 				return result.ToArray();
 			}

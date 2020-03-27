@@ -46,9 +46,14 @@ namespace FirebirdSql.Data.Client.Managed
 			return new[]
 			{
 				new Protocol(IscCodes.PROTOCOL_VERSION10, IscCodes.ptype_rpc, IscCodes.ptype_batch_send),
+// Don't attempt protocol version >10 with INTERBASE flag set.
+// For InterBase, version 10 will be negotiated, but Firebird will attempt version >10 and fail without the additional auth data.
+// (protocol version 10 was introduced in InterBase 6.0)
+#if !INTERBASE
 				new Protocol(IscCodes.PROTOCOL_VERSION11, IscCodes.ptype_rpc, IscCodes.ptype_lazy_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION12, IscCodes.ptype_rpc, IscCodes.ptype_lazy_send),
 				new Protocol(IscCodes.PROTOCOL_VERSION13, IscCodes.ptype_rpc, IscCodes.ptype_lazy_send | (compression ? IscCodes.pflag_compress : 0)),
+#endif
 			};
 		}
 	}
